@@ -1,83 +1,52 @@
 const express = require('express');
-const session = require('express-session');
-const path = require('path');
-const crypto = require('crypto');
-const { createBareServer } = require('@tomphttp/bare-server-node');
 const http = require('http');
+const path = require('path');
+const { createBareServer } = require('@tomphttp/bare-server-node');
+const { uvPath } = require('@titaniumnetwork-dev/ultraviolet');
 
+// Initialize the Bare Server on the /bare/ route
+const bareServer = createBareServer('/bare/');
 const app = express();
-const server = http.createServer(app);
-const bare = createBareServer('/bare/');
+const server = http.createServer();
 
-// Setup session middleware for security tracking
-app.use(session({
-    secret: 'mining-heritage-key-2026',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } // Set to true if using HTTPS on production
-}));
+const PORT = process.env.PORT || 3000;
+const SECRET_PASSCODE = "admin123";
 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 
-// Serve static CSS directly
-app.get('/style.css', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'style.css'));
-});
+// Serve your public folder (where your website is)
+app.use(express.static(path.join(__dirname, 'public')));
 
-// 1. Public Homepage Router
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+// Serve the Ultraviolet core files from node_modules
+app.use('/uv/', express.static(uvPath));
 
-// 2. Gateway Router
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-// Form evaluation processor
-app.post('/login', (req, res) => {
-    const { email, password } = req.body;
-
-    const emailHash = crypto.createHash('sha256').update(email || '').digest('hex');
-    const passHash = crypto.createHash('sha256').update(password || '').digest('hex');
-
-    // SHA-256 validation prevents standard source inspection exposure
-    if (emailHash === '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b' && 
-        passHash === '6030c6a51d4eb611db84589d892795ecdbba62bc6e70eb1eaab61cdab5720027') {
-        req.session.authenticated = true;
-        res.redirect('/secret');
+// Handle the login authentication
+app.post('/auth', (req, res) => {
+    if (req.body.password === SECRET_PASSCODE) {
+        res.sendFile(path.join(__dirname, 'public', 'secret.html'));
     } else {
-        res.redirect('/login?error=failed');
+        res.redirect('/login.html');
     }
 });
 
-// 3. Protected Terminal Router
-app.get('/secret', (req, res) => {
-    if (!req.session.authenticated) {
-        return res.redirect('/login');
-    }
-    res.sendFile(path.join(__dirname, 'public', 'secret.html'));
-});
-
-// Bind Ultraviolet reverse routing handler to bare network sockets
+// Intercept requests: Route to Bare Server if needed, otherwise route to Express
 server.on('request', (req, res) => {
-    if (bare.shouldRoute(req)) {
-        bare.route(req, res);
+    if (bareServer.shouldRoute(req)) {
+        bareServer.routeRequest(req, res);
     } else {
         app(req, res);
     }
 });
 
+// Intercept WebSocket upgrades (vital for sites that use live connections)
 server.on('upgrade', (req, socket, head) => {
-    if (bare.shouldRoute(req)) {
-        bare.routeUpgrade(req, socket, head);
+    if (bareServer.shouldRoute(req)) {
+        bareServer.routeUpgrade(req, socket, head);
     } else {
         socket.end();
     }
 });
 
-const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server executing active tunnel allocation on port ${PORT}`);
+    console.log(`System active and listening on port ${PORT}`);
 });
