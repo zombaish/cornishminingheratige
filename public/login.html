@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Access</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-container {
+            border: 1px solid #00ff00;
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+            background: #000;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+        }
+        .sys-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px dashed #00ff00;
+            padding-bottom: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            background: #050505;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            box-sizing: border-box;
+            outline: none;
+        }
+        input:focus {
+            box-shadow: inset 0 0 5px rgba(0, 255, 0, 0.5);
+        }
+        button {
+            width: 100%;
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="sys-header">
+            <h2>UNAUTHORIZED ACCESS PROHIBITED</h2>
+            <p>Please enter your credentials.</p>
+        </div>
+        
+        <form action="/auth" method="POST">
+            <div class="form-group">
+                <label for="passcode">ACCESS KEY_</label>
+                <input type="password" id="passcode" name="password" required autofocus autocomplete="off">
+            </div>
+            <button type="submit">INITIATE HANDSHAKE</button>
+        </form>
+    </div>
+
+</body>
+</html>
